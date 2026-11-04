@@ -3,6 +3,7 @@
 #   기록: update.log (git 제외)
 $ErrorActionPreference = 'Continue'
 $env:PYTHONIOENCODING = 'utf-8'
+$OutputEncoding = [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false   # 11/4 PowerShell 5 에서 커밋 메시지·기록 한글이 깨지던 것
 Set-Location -LiteralPath $PSScriptRoot
 $log = Join-Path $PSScriptRoot 'update.log'
 function Log($m) { Add-Content -LiteralPath $log -Value ("{0:MM-dd HH:mm:ss}  {1}" -f (Get-Date), $m) -Encoding utf8 }
