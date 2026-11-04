@@ -31,8 +31,9 @@ REF_CLASS = '107'   # 참고로 남길 학생 반(학번 앞 세 자리) — 1�
 
 def label(zip_path):
     """보여 줄 이름과 폴더 이름. 공개 사이트라 '10101홍길동' → ('10101 홍*동', '10101'): 이름은 가운데를 가리고 폴더는 학번만(10/29 사용자 결정)."""
-    s = zip_path.stem
-    s = re.sub(r'[_ ]*AR ?웹뷰어$', '', s).strip(' _') or zip_path.stem
+    import unicodedata
+    stem = unicodedata.normalize('NFC', zip_path.stem)   # 11/4 맥·아이패드에서 올린 파일은 한글이 풀어쓴(NFD) 꼴이라 이름 가림을 빠져나갔다
+    s = re.sub(r'[_ ]*(AR ?)?웹 ?뷰어$', '', stem).strip(' _') or stem
     s = re.sub(r'^\W+', '', s) or s   # '❤️10912홍길동'처럼 앞에 붙은 이모지·기호는 떼야 이름이 가려진다
     m = re.match(r'^(\d{4,6})[\s_-]*([가-힣]{2,5})', s)
     if not m:
@@ -40,8 +41,13 @@ def label(zip_path):
         m = re.match(r'^(\d{5})[\s_-]*[A-Za-z]', s)
         if m:
             return m[1], m[1]
+        r = re.fullmatch(r'([가-힣]{2,5}?)+', s)   # '김다은김다은김다은'처럼 이름을 되풀이한 것
+        if r:
+            s = r[1]
         if re.fullmatch(r'[가-힣]{2,5}', s):   # 11/4 이름만 쓴 연수생 파일도 가린다
             return (s[0] + '*' if len(s) == 2 else s[0] + '*' * (len(s) - 2) + s[-1]), 'name'
+        if re.search(r'[가-힣]', s):   # 그 밖에 한글이 섞인 이름은 혹시 실명일 수 있어 첫·끝 글자만 남기고 폴더는 'name'
+            return s[0] + '*' * max(1, len(s) - 2) + (s[-1] if len(s) > 2 else ''), 'name'
         return s, s
     sid, nm = m.groups()
     masked = nm[0] + '*' if len(nm) == 2 else nm[0] + '*' * (len(nm) - 2) + nm[-1]
